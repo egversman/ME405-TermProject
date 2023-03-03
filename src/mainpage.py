@@ -2,7 +2,7 @@
 """
 
 """! @section sec_software Software Design
-    The design is documented in the ensuing subsections.
+    The term project design is documented in the ensuing subsections.
 """
 
 """! @subsection subsec_task1 Task One
