@@ -1,4 +1,4 @@
-"""! @file mainpage.py
+"""! @mainpage ME 405 Term Project Documentation
 """
 
 """! @section sec_software Software Design
