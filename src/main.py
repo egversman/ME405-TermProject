@@ -14,9 +14,11 @@ def process_target(coord):
     # function to process target coordinate into encoder ticks?
     return coord
 
+
 def get_target_task1(shares):
-    target_x_share, target_y_share, targ_acquired_share, yaw_curr_share, at_yaw_share,\
-        pitch_curr_share, at_pitch_share, nerf_motor_share, solenoid_share = shares
+    target_x_share, target_y_share, targ_acquired_share,\
+        yaw_curr_share, at_yaw_share,pitch_curr_share, at_pitch_share,\
+        nerf_motor_share, solenoid_share = shares
 
     i2c_bus = I2C(1)
     camera = MLX_Cam(i2c_bus)
@@ -48,14 +50,15 @@ def get_target_task1(shares):
             target_x_share.put(target_x)
             target_y_share.put(target_y)
             targ_acquired_share.put(1)
-            # print(mid_row, mid_col)
+            print("Target acquired.")
 
         yield 0
 
 
 def motor_yaw_task2(shares):
-    target_x_share, target_y_share, targ_acquired_share, yaw_curr_share, at_yaw_share,\
-        pitch_curr_share, at_pitch_share, nerf_motor_share, solenoid_share = shares
+    target_x_share, target_y_share, targ_acquired_share,\
+        yaw_curr_share, at_yaw_share,pitch_curr_share, at_pitch_share,\
+        nerf_motor_share, solenoid_share = shares
 
     motor_dvr = motor_driver.MotorDriver()
     encoder = encoder_reader.EncoderReader()
@@ -63,8 +66,8 @@ def motor_yaw_task2(shares):
     motor_dvr.en_pin.high()
 
     while True:
-        if (targ_acquired_share) & (not at_yaw_share):
-            setpoint = target_x_share.get()  # Must process target coordinates somehow?
+        if targ_acquired_share & (not at_yaw_share):
+            setpoint = target_x_share.get()
             controller.set_setpoint(setpoint)
             motor_dvr.set_duty_cycle(
                 controller.run(setpoint, encoder.read())
@@ -75,13 +78,16 @@ def motor_yaw_task2(shares):
 
             if yaw_curr_share == target_x_share:
                 at_yaw_share.put(1)
+                motor_dvr.disable()
+                print("Yaw angle positioned.")
 
         yield 0
 
 
 def motor_pitch_task3(shares):
-    target_x_share, target_y_share, targ_acquired_share, yaw_curr_share, at_yaw_share,\
-        pitch_curr_share, at_pitch_share, nerf_motor_share, solenoid_share = shares
+    target_x_share, target_y_share, targ_acquired_share,\
+        yaw_curr_share, at_yaw_share,pitch_curr_share, at_pitch_share,\
+        nerf_motor_share, solenoid_share = shares
 
     motor_dvr = motor_driver.MotorDriver(
         pyb.Pin.board.PC1, pyb.Pin.board.PA0, pyb.Pin.board.PA1, 5
@@ -90,11 +96,11 @@ def motor_pitch_task3(shares):
         pyb.Pin.board.PB6, pyb.Pin.board.PB7, 4
     )
     controller = clp_controller.CLPController(Kp=0.01)
-    motor_dvr.en_pin.high()
+    motor_dvr.enable()
 
     while True:
-        if (targ_acquired_share) & (at_yaw_share) & (not at_pitch_share):
-            setpoint = target_y_share.get()  # Must process target coordinates somehow?
+        if targ_acquired_share & at_yaw_share & (not at_pitch_share):
+            setpoint = target_y_share.get()
             controller.set_setpoint(setpoint)
             motor_dvr.set_duty_cycle(
                 controller.run(setpoint, encoder.read())
@@ -105,13 +111,16 @@ def motor_pitch_task3(shares):
 
             if pitch_curr_share == target_y_share:
                 at_pitch_share.put(1)
+                motor_dvr.disable()
+                print("Pitch angle positioned.")
 
         yield 0
 
 
 def shoot_task4(shares):
-    target_x_share, target_y_share, targ_acquired_share, yaw_curr_share, at_yaw_share,\
-        pitch_curr_share, at_pitch_share, nerf_motor_share, solenoid_share = shares
+    target_x_share, target_y_share, targ_acquired_share,\
+        yaw_curr_share, at_yaw_share,pitch_curr_share, at_pitch_share,\
+        nerf_motor_share, solenoid_share = shares
 
     nerf_motor_pin = pyb.Pin(pyb.Pin.board.PC2, pyb.Pin.OUT_PP)
     solenoid_pin = pyb.Pin(pyb.Pin.board.PC3, pyb.Pin.OUT_PP)
@@ -123,18 +132,37 @@ def shoot_task4(shares):
         utime.delay(200)
         nerf_motor_pin.low()
         solenoid_pin.low()
+        print("Shot fired.")
 
 
 if __name__ == "__main__":
-    target_x_share = task_share.Share('f', thread_protect=True, name="target_x")
-    target_y_share = task_share.Share('f', thread_protect=True, name="target_y")
-    targ_acquired_share = task_share.Share('b', thread_protect=True, name="targ_acquired")
-    yaw_curr_share = task_share.Share('f', thread_protect=True, name="yaw_curr")
-    pitch_curr_share = task_share.Share('f', thread_protect=True, name="pitch_curr")
-    at_yaw_share = task_share.Share('b', thread_protect=True, name="nerf_motor")
-    at_pitch_share = task_share.Share('b', thread_protect=True, name="solenoid")
-    nerf_motor_share = task_share.Share('b', thread_protect=True, name="nerf_motor")
-    solenoid_share = task_share.Share('b', thread_protect=True, name="solenoid")
+    target_x_share = task_share.Share(
+        'f', thread_protect=True, name="target_x"
+        )
+    target_y_share = task_share.Share(
+        'f', thread_protect=True, name="target_y"
+        )
+    targ_acquired_share = task_share.Share(
+        'b', thread_protect=True, name="targ_acquired"
+        )
+    yaw_curr_share = task_share.Share(
+        'f', thread_protect=True, name="yaw_curr"
+        )
+    pitch_curr_share = task_share.Share(
+        'f', thread_protect=True, name="pitch_curr"
+        )
+    at_yaw_share = task_share.Share(
+        'b', thread_protect=True, name="nerf_motor"
+        )
+    at_pitch_share = task_share.Share(
+        'b', thread_protect=True, name="solenoid"
+        )
+    nerf_motor_share = task_share.Share(
+        'b', thread_protect=True, name="nerf_motor"
+        )
+    solenoid_share = task_share.Share(
+        'b', thread_protect=True, name="solenoid"
+        )
 
     shares = target_x_share, target_y_share, targ_acquired_share, \
         yaw_curr_share, at_yaw_share, \
@@ -151,12 +179,20 @@ if __name__ == "__main__":
     nerf_motor_share.put(0)
     solenoid_share.put(0)
 
-    # Move the motors such that the accelerometer is zeroed?
+    # Move the motors to a set home position?
 
-    t1_get_target = cotask.Task(get_target_task1, name="Task1", priority=3, shares=shares)
-    t2_motor_yaw = cotask.Task(motor_yaw_task2, name="Task2", priority=4, shares=shares)
-    t3_motor_pitch = cotask.Task(motor_pitch_task3, name="Task3", priority=4, shares=shares)
-    t4_shoot = cotask.Task(shoot_task4, name="Task4", priority=2, shares=shares)
+    t1_get_target = cotask.Task(
+        get_target_task1, name="Task1", priority=3, shares=shares
+        )
+    t2_motor_yaw = cotask.Task(
+        motor_yaw_task2, name="Task2", priority=4, shares=shares
+        )
+    t3_motor_pitch = cotask.Task(
+        motor_pitch_task3, name="Task3", priority=4, shares=shares
+        )
+    t4_shoot = cotask.Task(
+        shoot_task4, name="Task4", priority=2, shares=shares
+        )
 
     cotask.task_list.append(t1_get_target)
     cotask.task_list.append(t2_motor_yaw)
@@ -170,4 +206,4 @@ if __name__ == "__main__":
             cotask.task_list.pri_sched()
         except KeyboardInterrupt:
             break
-    print('Done')
+    print('Done.')

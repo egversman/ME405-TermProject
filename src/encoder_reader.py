@@ -4,6 +4,7 @@
 """
 import pyb
 
+
 class EncoderReader:
     """! 
     This class implements an encoder reader for the ME 405 lab kit.
@@ -44,9 +45,12 @@ class EncoderReader:
         """!
         Return a string representation of the EncoderReader object for a user-friendly output.
         """
-        return f"EncoderReader\n\tpin1 = {self.pin1},\n\tpin2 = {self.pin2},\n\ttimer = {self.timer}, and\n\tcurrent position = {self.curr_pos}"
+        return f"EncoderReader\n\tpin1 = {self.pin1}, \
+            \n\tpin2 = {self.pin2}, \
+            \n\ttimer = {self.timer}, and \
+            \n\tcurrent position = {self.curr_pos}"
 
-    def read (self):
+    def read(self):
         """!
         Returns the current position of the motor.
         """
@@ -54,10 +58,10 @@ class EncoderReader:
         curr_count = self.timer.counter()
         difference = curr_count - self.prev_count
         
-        if (difference) > (32768):
+        if difference > 32768:
             difference -= 65535
             
-        if (difference) < -(32768):
+        if difference < -32768:
             difference += 65535
         
         self.curr_pos += difference
@@ -65,14 +69,15 @@ class EncoderReader:
         
         return self.curr_pos
     
-    def zero (self):
+    def zero(self):
         """!
         Reads the current position of the motor and sets the count to 0 at that 
         current position.
         """
         self.prev_count = self.timer.counter()
         self.curr_pos = 0
-            
+
+
 if __name__ == "__main__":
     '''
     Test encoder class: Turn the motor by hand and run the motor under power. 

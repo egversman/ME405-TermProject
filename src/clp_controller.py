@@ -4,6 +4,7 @@
 """
 import pyb
 
+
 class CLPController:
     """! 
     closed loop proportional controller class 
@@ -60,7 +61,8 @@ class CLPController:
         
         for time, position in zip(self.times, self.motor_positions):
             print(f'{time}, {position}')
-        
+
+
 if __name__ == "__main__":
     pass
     
