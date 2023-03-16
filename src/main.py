@@ -2,8 +2,8 @@ import pyb
 from machine import I2C
 import cotask
 import task_share
-from mlx_cam import MLX_Cam
-from mlx90640.calibration import NUM_ROWS, NUM_COLS
+# from mlx_cam import MLX_Cam
+# from mlx_raw.mlx90640.calibration import NUM_ROWS, NUM_COLS
 import motor_driver
 import encoder_reader
 import clp_controller
@@ -11,9 +11,8 @@ import gc
 import utime
 
 
-def process_target(coord, axis): #should return encoder ticks
-    # function to process target coordinate into encoder ticks
-    if axis:  # true maps to x-axis
+def process_target(coord, axis):
+    if axis:
         cam_dist = coord - NUM_ROWS / 2
         angle = (55 / 2) * (cam_dist / (NUM_ROWS / 2))
     else:
@@ -24,7 +23,7 @@ def process_target(coord, axis): #should return encoder ticks
 
 
 def get_target_task1(shares):
-    target_x_share, target_y_share, targ_acquired_share,\
+    start_share, target_x_share, target_y_share, targ_acquired_share,\
         yaw_curr_share, at_yaw_share,pitch_curr_share, at_pitch_share,\
         nerf_motor_share, solenoid_share = shares
 
@@ -66,14 +65,14 @@ def get_target_task1(shares):
 
 
 def motor_yaw_task2(shares):
-    target_x_share, target_y_share, targ_acquired_share,\
+    start_share, target_x_share, target_y_share, targ_acquired_share,\
         yaw_curr_share, at_yaw_share,pitch_curr_share, at_pitch_share,\
         nerf_motor_share, solenoid_share = shares
 
     motor_dvr = motor_driver.MotorDriver()
     encoder = encoder_reader.EncoderReader()
     controller = clp_controller.CLPController(Kp=0.01)
-    motor_dvr.en_pin.high()
+    motor_dvr.enable()
 
     while True:
         if targ_acquired_share & (not at_yaw_share):
@@ -95,7 +94,7 @@ def motor_yaw_task2(shares):
 
 
 def motor_pitch_task3(shares):
-    target_x_share, target_y_share, targ_acquired_share,\
+    start_share, target_x_share, target_y_share, targ_acquired_share,\
         yaw_curr_share, at_yaw_share,pitch_curr_share, at_pitch_share,\
         nerf_motor_share, solenoid_share = shares
 
@@ -109,6 +108,16 @@ def motor_pitch_task3(shares):
     motor_dvr.enable()
 
     while True:
+        print("here")
+        if start_share.get():
+            motor_dvr.set_setpoint(16384 / 2)
+            motor_dvr.set_kp(0.5)
+#             motor_dvr.en_pin.high()
+            motor_dvr.set_duty_cycle(100)
+            
+            start_share.put(0)
+            print("Turret started")
+#         motor_dvr.en_pin.low()
         if targ_acquired_share & (not at_pitch_share):
             setpoint = target_y_share.get()
             controller.set_setpoint(setpoint)
@@ -128,68 +137,52 @@ def motor_pitch_task3(shares):
 
 
 def shoot_task4(shares):
-    target_x_share, target_y_share, targ_acquired_share,\
+    start_share, target_x_share, target_y_share, targ_acquired_share,\
         yaw_curr_share, at_yaw_share,pitch_curr_share, at_pitch_share,\
         nerf_motor_share, solenoid_share = shares
 
     nerf_motor_pin = pyb.Pin(pyb.Pin.board.PC2, pyb.Pin.OUT_PP)
     solenoid_pin = pyb.Pin(pyb.Pin.board.PC3, pyb.Pin.OUT_PP)
 
-    if targ_acquired_share & at_yaw_share & at_pitch_share:
+    if targ_acquired_share.get() & at_yaw_share.get() & at_pitch_share.get():
         nerf_motor_pin.high()
-        utime.delay(200)
-        solenoid_pin.high()
-        utime.delay(200)
+        utime.sleep_ms(2000)
+#         solenoid_pin.high()
+#         utime.sleep_ms(1000)
         nerf_motor_pin.low()
-        solenoid_pin.low()
-        print("Shot fired.")
+#         solenoid_pin.low()
+        print("motor on -- Shot fired.")
 
 
 if __name__ == "__main__":
-    target_x_share = task_share.Share(
-        'f', thread_protect=True, name="target_x"
-        )
-    target_y_share = task_share.Share(
-        'f', thread_protect=True, name="target_y"
-        )
-    targ_acquired_share = task_share.Share(
-        'b', thread_protect=True, name="targ_acquired"
-        )
-    yaw_curr_share = task_share.Share(
-        'f', thread_protect=True, name="yaw_curr"
-        )
-    pitch_curr_share = task_share.Share(
-        'f', thread_protect=True, name="pitch_curr"
-        )
-    at_yaw_share = task_share.Share(
-        'b', thread_protect=True, name="nerf_motor"
-        )
-    at_pitch_share = task_share.Share(
-        'b', thread_protect=True, name="solenoid"
-        )
-    nerf_motor_share = task_share.Share(
-        'b', thread_protect=True, name="nerf_motor"
-        )
-    solenoid_share = task_share.Share(
-        'b', thread_protect=True, name="solenoid"
-        )
+    start_share = task_share.Share('b', name="start")
+    target_x_share = task_share.Share('f', name="target_x")
+    target_y_share = task_share.Share('f', name="target_y")
+    targ_acquired_share = task_share.Share('b', name="targ_acquired")
+    yaw_curr_share = task_share.Share('f', name="yaw_curr")
+    pitch_curr_share = task_share.Share('f', name="pitch_curr")
+    at_yaw_share = task_share.Share('b', name="nerf_motor")
+    at_pitch_share = task_share.Share('b', name="solenoid")
+    nerf_motor_share = task_share.Share('b', name="nerf_motor")
+    solenoid_share = task_share.Share('b', name="solenoid")
 
-    shares = target_x_share, target_y_share, targ_acquired_share, \
+    shares = start_share, target_x_share, target_y_share, targ_acquired_share, \
         yaw_curr_share, at_yaw_share, \
         pitch_curr_share, at_pitch_share, \
         nerf_motor_share, solenoid_share
 
+    start_share.put(1)
     # target_x_share.put()
     # target_y_share.put()
-    targ_acquired_share.put(1)
+    targ_acquired_share.put(0)
     # yaw_curr_share.put()
-    at_yaw_share.put(1)
+    at_yaw_share.put(0)
     # pitch_curr_share.put()
-    at_pitch_share.put(1)
+    at_pitch_share.put(0)
     nerf_motor_share.put(0)
     solenoid_share.put(0)
 
-    # Move the motors to a set home position?
+    # Move the motors to a set home position? Rotate 180deg?
 
     # t1_get_target = cotask.Task(
     #     get_target_task1, name="Task1", priority=1, shares=shares
@@ -197,17 +190,17 @@ if __name__ == "__main__":
     # t2_motor_yaw = cotask.Task(
     #     motor_yaw_task2, name="Task2", priority=2, shares=shares
     #     )
-    # t3_motor_pitch = cotask.Task(
-    #     motor_pitch_task3, name="Task3", priority=2, shares=shares
-    #     )
-    t4_shoot = cotask.Task(
-        shoot_task4, name="Task4", priority=3, shares=shares
+    t3_motor_pitch = cotask.Task(
+        motor_pitch_task3, name="Task3", priority=2, period=20, shares=shares
         )
+#     t4_shoot = cotask.Task(
+#         shoot_task4, name="Task4", priority=3, shares=shares
+#         )
 
     # cotask.task_list.append(t1_get_target)
     # cotask.task_list.append(t2_motor_yaw)
-    # cotask.task_list.append(t3_motor_pitch)
-    cotask.task_list.append(t4_shoot)
+    cotask.task_list.append(t3_motor_pitch)
+#     cotask.task_list.append(t4_shoot)
 
     gc.collect()
 
