@@ -32,7 +32,7 @@ def get_target_task1(shares):
     camera = MLX_Cam(i2c_bus)
 
     while True:
-        if not targ_acquired_share:
+        if not targ_acquired_share.get():
             cam_data = []
             image = camera.get_image()
             for line in camera.get_csv(image, limits=(0, 99)):
@@ -77,7 +77,7 @@ def motor_yaw_task2(shares):
     motor_dvr.enable()
 
     while True:
-        if targ_acquired_share & (not at_yaw_share):
+        if targ_acquired_share.get() & (not at_yaw_share.get()):
             setpoint = target_x_share.get()
             controller.set_setpoint(setpoint)
             motor_dvr.set_duty_cycle(
@@ -112,10 +112,10 @@ def motor_pitch_task3(shares):
 
     while True:
         if start_share.get():
-#             controller.set_setpoint(16384 / 2)
+            controller.set_setpoint(16384 / 2)
 #             controller.set_Kp(0.5)
             motor_dvr.set_duty_cycle(-100)
-            utime.sleep_ms(1500)
+            utime.sleep_ms(1100)
             motor_dvr.en_pin.low()
             motor_dvr.set_duty_cycle(0)
             
@@ -148,10 +148,8 @@ def shoot_task4(shares):
 
     nerf_motor_pin = pyb.Pin(pyb.Pin.board.PC2, pyb.Pin.OUT_PP)
     solenoid_pin = pyb.Pin(pyb.Pin.board.PC3, pyb.Pin.OUT_PP)
-    print("Here 1")
 
     if targ_acquired_share.get() & at_yaw_share.get() & at_pitch_share.get():
-        print("Here 2")
         nerf_motor_pin.high()
         utime.sleep_ms(2000)
 #         solenoid_pin.high()
@@ -189,13 +187,11 @@ if __name__ == "__main__":
     nerf_motor_share.put(0)
     solenoid_share.put(0)
 
-    # Move the motors to a set home position? Rotate 180deg?
-
     t1_get_target = cotask.Task(
         get_target_task1, name="Task1", priority=1, period=20, shares=shares
         )
     t2_motor_yaw = cotask.Task(
-        motor_yaw_task2, name="Task2", priority=2, period=20, shares=shares
+        motor_yaw_task2, name="Task2", priority=2, period=10, shares=shares
         )
     t3_motor_pitch = cotask.Task(
         motor_pitch_task3, name="Task3", priority=2, period=20, shares=shares
@@ -205,9 +201,9 @@ if __name__ == "__main__":
         )
 
     cotask.task_list.append(t1_get_target)
-#    cotask.task_list.append(t2_motor_yaw)
+    cotask.task_list.append(t2_motor_yaw)
     cotask.task_list.append(t3_motor_pitch)
-    cotask.task_list.append(t4_shoot)
+#     cotask.task_list.append(t4_shoot)
 
     gc.collect()
 
