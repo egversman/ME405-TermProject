@@ -3,6 +3,7 @@ from machine import I2C
 import cotask
 import task_share
 from mlx_cam import MLX_Cam
+from mlx90640.calibration import NUM_ROWS, NUM_COLS
 import motor_driver
 import encoder_reader
 import clp_controller
@@ -10,9 +11,16 @@ import gc
 import utime
 
 
-def process_target(coord):
-    # function to process target coordinate into encoder ticks?
-    return coord
+def process_target(coord, axis): #should return encoder ticks
+    # function to process target coordinate into encoder ticks
+    if axis:  # true maps to x-axis
+        cam_dist = coord - NUM_ROWS / 2
+        angle = (55 / 2) * (cam_dist / (NUM_ROWS / 2))
+    else:
+        cam_dist = coord - NUM_COLS / 2
+        angle = (35 / 2) * (cam_dist / (NUM_COLS / 2))
+
+    return angle * (16384 / 360)
 
 
 def get_target_task1(shares):
@@ -37,18 +45,20 @@ def get_target_task1(shares):
             for row in range(len(cam_data) - block_size + 1):
                 for col in range(len(cam_data[0]) - block_size + 1):
                     curr_sum = sum(
-                        sum(cam_data[row + i][col + j] for j in range(block_size)) for i in range(block_size))
+                        sum(cam_data[row+i][col+j] for j in range(block_size)
+                            ) for i in range(block_size)
+                        )
                     if curr_sum > max_sum:
                         row_idx, col_idx = row, col
                         max_sum = curr_sum
             mid_row = row_idx + block_size // 2
             mid_col = col_idx + block_size // 2
 
-            target_y = process_target(mid_row)
-            target_x = process_target(mid_col)
+            dist_y = process_target(mid_row, False)
+            dist_x = process_target(mid_col, True)
 
-            target_x_share.put(target_x)
-            target_y_share.put(target_y)
+            target_x_share.put(dist_x)
+            target_y_share.put(dist_y)
             targ_acquired_share.put(1)
             print("Target acquired.")
 
@@ -99,7 +109,7 @@ def motor_pitch_task3(shares):
     motor_dvr.enable()
 
     while True:
-        if targ_acquired_share & at_yaw_share & (not at_pitch_share):
+        if targ_acquired_share & (not at_pitch_share):
             setpoint = target_y_share.get()
             controller.set_setpoint(setpoint)
             motor_dvr.set_duty_cycle(
@@ -171,32 +181,32 @@ if __name__ == "__main__":
 
     # target_x_share.put()
     # target_y_share.put()
-    targ_acquired_share.put(0)
+    targ_acquired_share.put(1)
     # yaw_curr_share.put()
-    at_yaw_share.put(0)
+    at_yaw_share.put(1)
     # pitch_curr_share.put()
-    at_pitch_share.put(0)
+    at_pitch_share.put(1)
     nerf_motor_share.put(0)
     solenoid_share.put(0)
 
     # Move the motors to a set home position?
 
-    t1_get_target = cotask.Task(
-        get_target_task1, name="Task1", priority=3, shares=shares
-        )
-    t2_motor_yaw = cotask.Task(
-        motor_yaw_task2, name="Task2", priority=4, shares=shares
-        )
-    t3_motor_pitch = cotask.Task(
-        motor_pitch_task3, name="Task3", priority=4, shares=shares
-        )
+    # t1_get_target = cotask.Task(
+    #     get_target_task1, name="Task1", priority=1, shares=shares
+    #     )
+    # t2_motor_yaw = cotask.Task(
+    #     motor_yaw_task2, name="Task2", priority=2, shares=shares
+    #     )
+    # t3_motor_pitch = cotask.Task(
+    #     motor_pitch_task3, name="Task3", priority=2, shares=shares
+    #     )
     t4_shoot = cotask.Task(
-        shoot_task4, name="Task4", priority=2, shares=shares
+        shoot_task4, name="Task4", priority=3, shares=shares
         )
 
-    cotask.task_list.append(t1_get_target)
-    cotask.task_list.append(t2_motor_yaw)
-    cotask.task_list.append(t3_motor_pitch)
+    # cotask.task_list.append(t1_get_target)
+    # cotask.task_list.append(t2_motor_yaw)
+    # cotask.task_list.append(t3_motor_pitch)
     cotask.task_list.append(t4_shoot)
 
     gc.collect()
