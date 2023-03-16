@@ -108,17 +108,18 @@ def motor_pitch_task3(shares):
     motor_dvr.enable()
 
     while True:
-        print("here")
         if start_share.get():
-            motor_dvr.set_setpoint(16384 / 2)
-            motor_dvr.set_kp(0.5)
-#             motor_dvr.en_pin.high()
-            motor_dvr.set_duty_cycle(100)
+#             controller.set_setpoint(16384 / 2)
+#             controller.set_Kp(0.5)
+            motor_dvr.set_duty_cycle(-100)
+            utime.sleep_ms(1000)
+            motor_dvr.en_pin.low()
+            motor_dvr.set_duty_cycle(0)
             
             start_share.put(0)
+            # motor_dvr.disable()
             print("Turret started")
-#         motor_dvr.en_pin.low()
-        if targ_acquired_share & (not at_pitch_share):
+        if targ_acquired_share.get() & (not at_pitch_share.get()):
             setpoint = target_y_share.get()
             controller.set_setpoint(setpoint)
             motor_dvr.set_duty_cycle(
