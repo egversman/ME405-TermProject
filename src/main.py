@@ -252,10 +252,10 @@ if __name__ == "__main__":
         motor_pitch_task2, name="Task2", priority=2, period=10, shares=shares
         )
     t3_motor_pitch = cotask.Task(
-        motor_yaw_task3, name="Task3", priority=2, period=20, shares=shares
+        motor_yaw_task3, name="Task3", priority=2, period=10, shares=shares
         )
     t4_shoot = cotask.Task(
-        shoot_task4, name="Task4", priority=3, period=20, shares=shares
+        shoot_task4, name="Task4", priority=3, period=50, shares=shares
         )
 
     cotask.task_list.append(t1_get_target)
