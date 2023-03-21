@@ -1,6 +1,6 @@
 # ME405-TermProject
 ## Introduction
-Our device is a Nerf turret that can rotate 180 degrees, locate targets using a 
+Our device is a Nerf turret that can rotate 180+ degrees, locate targets using a 
 thermal camera, and accurately fire foam darts. Its purpose is purely 
 recreational, providing a high-tech edge to Nerf battles. Our target market is 
 college-aged students who want to upgrade their own Nerf turrets for an even 
@@ -16,13 +16,22 @@ requirement for each axis of rotation. In the end, we settled on a gear ratio of
 4 for each axis.
 
 For rotation about the z-axis, we used a 12-inch turntable. Pitch rotation was 
-achieved through a clip holder that was directly attached to the gun and held 
-the clip.
+achieved through a magazine holder that was directly attached to the gun and held 
+the magazine.
 
 The triggering mechanism was made up of two motors housed within the nerf gun 
 that spun disks to launch the nerf darts. To fire the dart, we used a relay to 
 connect the motors to a power supply. At the same time, a solenoid pushed the 
 dart into the spinning disks to launch it.
+
+## Electronic Design
+The electronics of the turret were split into 3 main subcategories, the motors for the pitch and yaw, the wheels to launch the dart, and the solenoid that pushed the
+darts into the aforementioned wheels. The pitch and yaw motors were controlled by the MCU directly, but the wheels and solenoid were designed to be controlled with
+electronic switching devices such as transistors or relays, since they required more power than the MCU was able to output.
+
+One of the main issues with our electrical subsystems was our inexperience with designing circuits for and using said electronic switching devices, 
+either because the parts were not able to handle the power flowing through them in the case of the solenoid, or we were not providing enough voltage to actually switch
+them on possibly.
 
 ### CAD Design
 ![CAD Design](images/TurretCAD.png)
@@ -66,7 +75,7 @@ the tasks could be the cause for our inconsistent target acquisition.
 Unfortunately, our pitch axis was unable to drive the gun properly due to the 
 solenoid's excessive weight, which was not accounted for in our initial design. 
 The gear ratio for the pitch axis was far too small, as was the set screw 
-holding the clip of the gun to the motor shaft. 
+holding the magazine of the gun to the motor shaft. 
 
 We initially used a 12 V battery pack to power the solenoid, but the battery 
 pack could not provide enough current to fully extend the solenoid plunger. We 
@@ -87,6 +96,14 @@ motor. That being said, we did see success with the mounting of the thermal
 camera in relation to the ability to collect good data. We also feel that we 
 wrote an appropriate and efficient algorithm for target acquisition from the 
 camera.
+
+Most of the issues we faced with the implementation of our design was traceable to poor design decisions made early on in the process. We decided to attempt to actuate
+the nerf gun as it was intended, as opposed to allowing ourselves greater freedom in modifying the device. Had we made proper use of the project design principles and
+procedures we have been taught, we could have avoided this outcome. Our choice led to us choosing a solenoid with a 1.5 inch stroke out of necessity, which caused us
+no end of trouble, such as the weight and power issues detailed in the results section of this report. 
+
+A more elegant solution would have been to use a smaller solenoid attached to a series of levers to multiply it's travel distance, or a similar setup with a servo
+motor.
 
 There are a few things that we recommend improving with the next iteration of 
 this nerf turret. First off, the turntable can be sized down considerably to 
