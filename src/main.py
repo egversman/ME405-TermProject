@@ -105,7 +105,7 @@ def motor_pitch_task2(shares):
         @param  shares  This task requires access to the 'target_x,' 
                 'targ_acquired,' 'pitch_curr', and 'at_pitch' shares.
         """
-    target_x_share, targ_acquired_share, pitch_curr_share, at_pitch_share,  = shares
+    target_y_share, targ_acquired_share, pitch_curr_share, at_pitch_share,  = shares
 
     motor_dvr = motor_driver.MotorDriver()
     encoder = encoder_reader.EncoderReader()
@@ -114,7 +114,7 @@ def motor_pitch_task2(shares):
 
     while True:
         if targ_acquired_share.get() & (not at_pitch_share.get()):
-            setpoint = target_x_share.get()
+            setpoint = target_y_share.get()
             controller.set_setpoint(setpoint)
             motor_dvr.set_duty_cycle(
                 controller.run(setpoint, encoder.read())
@@ -123,7 +123,7 @@ def motor_pitch_task2(shares):
                 controller.motor_positions[len(controller.motor_positions) - 1]
             )
 
-            if abs(pitch_curr_share.get() - target_x_share.get()) < 5:
+            if abs(pitch_curr_share.get() - target_y_share.get()) < 5:
                 at_pitch_share.put(1)
                 motor_dvr.disable()
                 print("Pitch angle positioned.")
@@ -142,7 +142,7 @@ def motor_yaw_task3(shares):
         @param  shares  This task requires access to the 'start,' 'target_y,' 
                 'targ_acquired,' 'yaw_curr', and 'at_yaw' shares.
         """
-    start_share, target_y_share, targ_acquired_share, yaw_curr_share, \
+    start_share, target_x_share, targ_acquired_share, yaw_curr_share, \
         at_yaw_share, = shares
 
     motor_dvr = motor_driver.MotorDriver(
@@ -166,7 +166,7 @@ def motor_yaw_task3(shares):
             start_share.put(0)
             print("Turret started")
         if targ_acquired_share.get() & (not at_yaw_share.get()):
-            setpoint = target_y_share.get()
+            setpoint = target_x_share.get()
             controller.set_setpoint(setpoint)
             motor_dvr.set_duty_cycle(
                 controller.run(setpoint, encoder.read())
