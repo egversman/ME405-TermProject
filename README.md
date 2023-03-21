@@ -31,7 +31,7 @@ electronic switching devices such as transistors or relays, since they required 
 
 One of the main issues with our electrical subsystems was our inexperience with designing circuits for and using said electronic switching devices, 
 either because the parts were not able to handle the power flowing through them in the case of the solenoid, or we were not providing enough voltage to actually switch
-them on possibly.
+them on.
 
 ### CAD Design
 ![CAD Design](images/TurretCAD.png)
@@ -96,14 +96,6 @@ motor. That being said, we did see success with the mounting of the thermal
 camera in relation to the ability to collect good data. We also feel that we 
 wrote an appropriate and efficient algorithm for target acquisition from the 
 camera.
-
-Most of the issues we faced with the implementation of our design was traceable to poor design decisions made early on in the process. We decided to attempt to actuate
-the nerf gun as it was intended, as opposed to allowing ourselves greater freedom in modifying the device. Had we made proper use of the project design principles and
-procedures we have been taught, we could have avoided this outcome. Our choice led to us choosing a solenoid with a 1.5 inch stroke out of necessity, which caused us
-no end of trouble, such as the weight and power issues detailed in the results section of this report. 
-
-A more elegant solution would have been to use a smaller solenoid attached to a series of levers to multiply it's travel distance, or a similar setup with a servo
-motor.
 
 There are a few things that we recommend improving with the next iteration of 
 this nerf turret. First off, the turntable can be sized down considerably to 
