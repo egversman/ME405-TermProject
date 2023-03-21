@@ -15,7 +15,16 @@ The triggering mechanism was made up of two motors housed within the nerf gun th
 ## Software Design
 
 ## Tasks and States - Diagrams
-
+### Task Diagram
+![Task Diagram](images/TaskDiagram.drawio.png)
+### Get Target Task FSM
+![Get Target Task FSM](images/GetTargetFSM.drawio.png)
+### Motor Pitch Task FSM
+![Motor Pitch Task FSM](images/PitchFSM.drawio.png)
+### Motor Yaw Task FSM
+![Motor Yaw Task FSM](images/YawFSM.drawio.png)
+### Shoot Task FSM
+![Shoot Task FSM](images/ShootFSM.drawio.png)
 ## Results
 We decided to test our system in the spirit of the Wild West: with a good old-fashioned duel. During this test, we were pleased to see that our turret was able to rotate 180 degrees without any issues. We also observed that it had a slight bias towards people detected by the thermal camera. To perfect this targeting, further filtering would be required.
 Unfortunately, our pitch axis was unable to drive the gun properly due to the solenoid's excessive weight, which was not accounted for in our initial design. This misstep was the result of a breakdown in communication between our hardware and electrical teams. Furthermore, the solenoid was not supplied with sufficient power, which prevented it from actuating the darts. In fact, during a late-night production session, the solenoid even released some magic smoke from our breadboard.
