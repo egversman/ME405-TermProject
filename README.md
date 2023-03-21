@@ -25,13 +25,17 @@ connect the motors to a power supply. At the same time, a solenoid pushed the
 dart into the spinning disks to launch it.
 
 ## Electronic Design
-The electronics of the turret were split into 3 main subcategories, the motors for the pitch and yaw, the wheels to launch the dart, and the solenoid that pushed the
-darts into the aforementioned wheels. The pitch and yaw motors were controlled by the MCU directly, but the wheels and solenoid were designed to be controlled with
-electronic switching devices such as transistors or relays, since they required more power than the MCU was able to output.
+The electronics of the turret were split into 3 main subcategories; the motors 
+for the pitch and yaw, the motorized wheels in the nerf gun which launch the 
+dart, and the solenoid which pushes the darts into wheels. The pitch and yaw 
+motors were controlled by the MCU directly, but the wheels and solenoid were 
+designed to be controlled with electronic switching devices such as transistors 
+or relays, since they required more power than the MCU was able to output.
 
-One of the main issues with our electrical subsystems was our inexperience with designing circuits for and using said electronic switching devices, 
-either because the parts were not able to handle the power flowing through them in the case of the solenoid, or we were not providing enough voltage to actually switch
-them on possibly.
+One of the main issues with our electrical subsystems was our inexperience with 
+designing circuits for and using electronic switching devices. The parts were 
+either not able to handle the power flowing through them, or we were not 
+providing enough voltage to actually switch them on.
 
 ### CAD Design
 ![CAD Design](images/TurretCAD.png)
